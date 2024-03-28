@@ -97,8 +97,14 @@ namespace TJAConvert
 
                     if (!File.Exists(originalAudioPath))
                     {
-                        Console.WriteLine("Audio path does not exist. Check WAVE field in TJA.");
-                        return -2;
+                        // If the path does not exist, it is likely an encoding error, so try parsing again using shift_jis encoding
+                        metadata = new TJAMetadata(tjaPath, Encoding.GetEncoding("shift_jis"));
+                        originalAudioPath = $"{directory}/{metadata.AudioPath}";
+                        if (!File.Exists(originalAudioPath))
+                        {
+                            Console.WriteLine("Audio path does not exist. Check WAVE field in TJA.");
+                            return -2;
+                        }
                     }
                         
 
@@ -634,7 +640,8 @@ namespace TJAConvert
                 return -2;
             }
 
-            var newPath = $"{outputPath}\\{fileName}";
+            // Fix tja2fumen 0.7.0 version where conversion fails for file extensions other than .tja
+            var newPath = $"{outputPath}\\{fileName}.tja";
             if (metadata.Courses.Count == 1)
             {
                 var coursePostfix = metadata.Courses[0].CourseType.ToShort();

@@ -42,10 +42,14 @@ internal class TJAMetadata
 
     public List<Course> Courses = new();
 
-    public TJAMetadata(string tjaPath)
+    public TJAMetadata(string tjaPath) : this(tjaPath, FileEncoding.DetectFileEncoding(tjaPath))
+    {
+       
+    }
+
+    public TJAMetadata(string tjaPath, Encoding encoding)
     {
         Id = Path.GetFileNameWithoutExtension(tjaPath);
-        var encoding = FileEncoding.DetectFileEncoding(tjaPath);
         var lines = File.ReadLines(tjaPath, encoding).ToList();
 
         Title = FindAndGetField("TITLE");
@@ -75,8 +79,9 @@ internal class TJAMetadata
         }
 
         AudioPath = FindAndGetField("WAVE");
-        Offset = float.Parse(FindAndGetField("OFFSET"));
-        PreviewTime = float.Parse(FindAndGetField("DEMOSTART"));
+        // For songs where the OFFSET and DEMOSTART are empty, use TryParse to parse them
+        float.TryParse(FindAndGetField("OFFSET"), out Offset);
+        float.TryParse(FindAndGetField("DEMOSTART"), out PreviewTime);
 
         var genreEntry = FindAndGetField("GENRE");
         Genre = GetGenre(genreEntry);
